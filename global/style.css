@@ -2854,8 +2854,7 @@ label {
     margin-inline: auto;
   }
 
-  /* Native swipe with a single duplicate at each end for seamless wrapping. */
-  .package.is-carousel-clone { display: flex; }
+  /* Native scrolling remains available until the wheel is initialized. */
   .package-grid {
     width: 100vw;
     margin-left: calc(50% - 50vw);
@@ -2875,13 +2874,28 @@ label {
     max-width: 320px;
     scroll-snap-align: center;
     padding: 24px 20px;
-    transform: scale(.92);
-    opacity: .72;
-    transition: transform .2s ease, opacity .2s ease;
   }
-  .package-grid > .package.is-center-card {
-    transform: scale(1);
-    opacity: 1;
+  .package-grid.package-wheel {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    padding: 0;
+    touch-action: pan-y;
+  }
+  .package-wheel > .package {
+    position: absolute;
+    left: 50%;
+    top: 20px;
+    width: min(74vw, 320px);
+    max-width: none;
+    margin: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    will-change: transform;
+  }
+  .package-wheel > .package.is-carousel-clone {
+    display: flex;
+    pointer-events: none;
   }
   .package h3 {
     font-size: 27px;

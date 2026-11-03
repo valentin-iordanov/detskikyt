@@ -400,70 +400,149 @@
     });
   }
 
-  // Circular swipe uses only one duplicate at each end; native scrolling does
-  // the work and the position is corrected only after the gesture ends.
+  // Three cards rotate around a fixed centre. Only transforms change while
+  // dragging, so the browser can keep vertical page scrolling independent.
   document.querySelectorAll('.package-grid').forEach(grid => {
-    const originals = [...grid.querySelectorAll(':scope > .package')];
-    if (originals.length !== 3) return;
-    const clone = card => {
+    const cards = [...grid.querySelectorAll(':scope > .package')];
+    if (cards.length !== 3) return;
+    // One visual copy of each card fills the outer positions while the wheel
+    // rotates. Copies never receive focus or act as links.
+    const copies = cards.map(card => {
       const copy = card.cloneNode(true);
       copy.classList.add('is-carousel-clone');
       copy.setAttribute('aria-hidden', 'true');
-      copy.querySelectorAll('a, button, input, select, textarea').forEach(el => el.tabIndex = -1);
+      copy.querySelectorAll('a, button').forEach(link => link.setAttribute('tabindex', '-1'));
+      grid.append(copy);
       return copy;
-    };
-    const lastCopy = clone(originals[2]);
-    const firstCopy = clone(originals[0]);
-    grid.prepend(lastCopy);
-    grid.append(firstCopy);
-    const cards = [lastCopy, ...originals, firstCopy];
+    });
     const mobile = window.matchMedia('(max-width: 860px)');
-    let timer;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let current = 0;
+    let startX = 0;
+    let startY = 0;
+    let offset = 0;
+    let pointer = null;
+    let dragging = false;
+    let animating = false;
+    let suppressClick = false;
+    let frame = 0;
+    let finishTimer;
+    let stepSize = 0;
 
-    const position = card => {
-      const gridRect = grid.getBoundingClientRect();
-      const cardRect = card.getBoundingClientRect();
-      return grid.scrollLeft + cardRect.left + cardRect.width / 2 - gridRect.left - gridRect.width / 2;
-    };
-    const center = card => {
-      grid.style.scrollSnapType = 'none';
-      grid.scrollLeft = position(card);
-      grid.style.scrollSnapType = '';
-    };
-    const settle = () => {
+    const slot = index => ((index - current + 4) % 3) - 1;
+    const step = () => stepSize;
+    const paint = (drag = 0, animate = false) => {
       if (!mobile.matches) return;
-      const middle = grid.getBoundingClientRect().left + grid.clientWidth / 2;
-      const nearest = cards.reduce((best, card) => {
-        const rect = card.getBoundingClientRect();
-        const distance = Math.abs(rect.left + rect.width / 2 - middle);
-        return distance < best.distance ? { card, distance } : best;
-      }, { card: originals[0], distance: Infinity }).card;
-      if (nearest === lastCopy) center(originals[2]);
-      if (nearest === firstCopy) center(originals[0]);
+      const distance = step();
+      [...cards, ...copies].forEach((card, index) => {
+        const originalSlot = slot(index % cards.length);
+        const position = index < cards.length ? originalSlot :
+          originalSlot === -1 ? 2 : originalSlot === 1 ? -2 : 3;
+        const x = position * distance + drag;
+        const weight = Math.min(1, Math.abs(x) / distance);
+        card.style.transition = animate && !reduceMotion.matches
+          ? 'transform 300ms cubic-bezier(.22, .75, .22, 1), opacity 300ms ease' : 'none';
+        card.style.transform = `translate3d(calc(-50% + ${x}px), 0, 0) scale(${1 - weight * .08})`;
+        card.style.opacity = String(1 - weight * .28);
+        card.style.zIndex = String(3 - Math.abs(position));
+      });
     };
-    grid.addEventListener('scroll', () => {
-      if (!mobile.matches) return;
-      clearTimeout(timer);
-      timer = setTimeout(settle, 160);
-    }, { passive: true });
-    cards.forEach(card => card.addEventListener('click', event => {
-      if (!mobile.matches) return;
-      if (card.classList.contains('is-carousel-clone') || Math.abs(position(card) - grid.scrollLeft) > 20) {
-        event.preventDefault();
-        grid.scrollTo({ left: position(card), behavior: 'smooth' });
+    const updateAccess = () => {
+      cards.forEach((card, index) => {
+        if (mobile.matches && index !== current) card.setAttribute('aria-hidden', 'true');
+        else card.removeAttribute('aria-hidden');
+        card.querySelectorAll('a, button').forEach(link => {
+          if (mobile.matches && index !== current) link.setAttribute('tabindex', '-1');
+          else link.removeAttribute('tabindex');
+        });
+      });
+    };
+    const layout = () => {
+      if (!mobile.matches) {
+        grid.classList.remove('package-wheel');
+        grid.style.height = '';
+        [...cards, ...copies].forEach(card => {
+          card.style.removeProperty('transform');
+          card.style.removeProperty('transition');
+          card.style.removeProperty('opacity');
+          card.style.removeProperty('z-index');
+        });
+        updateAccess();
+        return;
       }
-    }, true));
-    if ('IntersectionObserver' in window) {
-      const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => entry.target.classList.toggle('is-center-card', entry.intersectionRatio >= 0.9));
-      }, { root: grid, threshold: [0.9] });
-      cards.forEach(card => observer.observe(card));
-    }
-    const initialize = () => {
-      if (mobile.matches) center(originals[0]);
+      grid.classList.add('package-wheel');
+      stepSize = cards[0].offsetWidth + 12;
+      grid.style.height = `${Math.max(...cards.map(card => card.offsetHeight)) + 40}px`;
+      paint();
+      updateAccess();
     };
-    requestAnimationFrame(initialize);
-    mobile.addEventListener('change', initialize);
+    const rotate = direction => {
+      if (animating || !mobile.matches) return;
+      animating = true;
+      paint(-direction * step(), true);
+      clearTimeout(finishTimer);
+      finishTimer = setTimeout(() => {
+        current = (current + direction + cards.length) % cards.length;
+        paint();
+        updateAccess();
+        animating = false;
+      }, reduceMotion.matches ? 0 : 310);
+    };
+    grid.addEventListener('pointerdown', event => {
+      if (!mobile.matches || animating || (event.pointerType === 'mouse' && event.button !== 0)) return;
+      pointer = event.pointerId;
+      startX = event.clientX;
+      startY = event.clientY;
+      offset = 0;
+      dragging = false;
+    });
+    grid.addEventListener('pointermove', event => {
+      if (event.pointerId !== pointer || animating) return;
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+      if (!dragging && Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) {
+        dragging = true;
+        try { grid.setPointerCapture(pointer); } catch {}
+      }
+      if (!dragging) return;
+      event.preventDefault();
+      offset = Math.max(-step(), Math.min(step(), dx));
+      if (!frame) frame = requestAnimationFrame(() => { frame = 0; paint(offset); });
+    });
+    const end = event => {
+      if (event.pointerId !== pointer) return;
+      pointer = null;
+      if (!dragging) return;
+      dragging = false;
+      suppressClick = true;
+      setTimeout(() => { suppressClick = false; }, 400);
+      if (frame) { cancelAnimationFrame(frame); frame = 0; }
+      if (event.type !== 'pointercancel' && Math.abs(offset) > 35) rotate(offset < 0 ? 1 : -1);
+      else paint(0, true);
+    };
+    grid.addEventListener('pointerup', end);
+    grid.addEventListener('pointercancel', end);
+    grid.addEventListener('click', event => {
+      if (!mobile.matches) return;
+      if (suppressClick || animating) { event.preventDefault(); event.stopPropagation(); return; }
+      const card = event.target.closest('.package');
+      const index = cards.indexOf(card);
+      if (index >= 0 && index !== current) {
+        event.preventDefault();
+        event.stopPropagation();
+        rotate(slot(index));
+      }
+    }, true);
+    grid.addEventListener('keydown', event => {
+      if (!mobile.matches || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+      event.preventDefault();
+      rotate(event.key === 'ArrowRight' ? 1 : -1);
+    });
+    grid.setAttribute('tabindex', '0');
+    grid.setAttribute('aria-label', 'Пакети за празника. Използвайте стрелките или плъзнете за следващ пакет.');
+    requestAnimationFrame(layout);
+    window.addEventListener('resize', layout, { passive: true });
+    document.fonts?.ready.then(layout);
   });
 })();
 
