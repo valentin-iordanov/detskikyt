@@ -635,7 +635,9 @@
   hosts.forEach((host, stageIdx) => {
     const svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('class', 'tethered-balloons-svg');
-    svg.setAttribute('viewBox', '0 0 1 1');
+    // Give the SVG a real hit-testing area: iOS does not reliably target shapes
+    // drawn outside a 1px SVG, even when overflow is visible.
+    svg.setAttribute('viewBox', '-180 -250 360 360');
     svg.setAttribute('aria-label', 'Балони');
 
     const pfx = `tb_${stageIdx}_`;
@@ -908,11 +910,11 @@
       };
 
       const toLocalCoords = e => {
-        const rect = svg.getBoundingClientRect();
-        return {
-          px: e.clientX - rect.left,
-          py: e.clientY - rect.top
-        };
+        const point = svg.createSVGPoint();
+        point.x = e.clientX;
+        point.y = e.clientY;
+        const local = point.matrixTransform(svg.getScreenCTM().inverse());
+        return { px: local.x, py: local.y };
       };
 
       const popBalloon = () => {
@@ -953,6 +955,11 @@
 
       g.addEventListener('pointerdown', e => {
         if (b.popped) return;
+        if (e.pointerType === 'touch') {
+          e.preventDefault();
+          popBalloon();
+          return;
+        }
         const { px, py } = toLocalCoords(e);
         b.pointerId = e.pointerId;
         b.startX = px;

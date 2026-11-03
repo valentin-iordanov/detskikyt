@@ -1186,10 +1186,10 @@ summary:focus-visible {
 
 .tethered-balloons-svg {
   position: absolute;
-  top: 0;
-  right: 28px;
-  width: 1px;
-  height: 1px;
+  top: -250px;
+  right: calc(28px - 180px);
+  width: 360px;
+  height: 360px;
   overflow: visible;
   pointer-events: none;
   z-index: 25;
@@ -2906,7 +2906,7 @@ label {
     top: 10px;
   }
   .package-carousel-nav {
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     gap: 8px;
@@ -2966,8 +2966,8 @@ label {
     margin-top: 34px;
   }
   .tethered-balloons-svg {
-    top: 4px;
-    right: 52px;
+    top: -246px;
+    right: calc(52px - 180px);
   }
   .all-inc-metrics {
     grid-template-columns: 1fr;
@@ -3228,8 +3228,8 @@ label {
     max-width: 65%;
   }
   .tethered-balloons-svg {
-    top: 4px;
-    right: 46px;
+    top: -246px;
+    right: calc(46px - 180px);
   }
   /* Full-width Horizontal Metrics on Mobile (Zero squishing!) */
   .all-inc-metrics {
