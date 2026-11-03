@@ -1791,88 +1791,96 @@ summary:focus-visible {
   font-size: 14px;
 }
 
-/* Google Reviews Section */
-.reviews .section-heading {
+/* Guest reviews */
+.reviews {
+  background: #1c1918;
+  border-block: 1px solid var(--line);
+}
+.reviews-intro {
+  display: flex;
+  justify-content: space-between;
   align-items: flex-end;
+  gap: 36px;
+  margin-bottom: 36px;
 }
-
-.review-source {
-  max-width: 340px;
-  font-size: 15px;
-  padding-left: 20px;
-  border-left: 2px solid var(--gold);
-}
-
-.review-source p {
+.reviews-intro h2 { max-width: 16ch; }
+.reviews-intro p {
+  max-width: 52ch;
+  margin-top: 20px;
   color: var(--ink-soft);
-  margin-top: 6px;
-  font-size: 14.5px;
 }
-
-.review-source .text-link {
-  margin-top: 10px;
-  font-size: 14px;
-}
-
-.google-word {
-  display: inline-flex;
+.reviews-google-link {
+  display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.google-word b {
-  color: #4285F4;
-  font-size: 22px;
-  font-weight: 800;
-}
-
-.review-quotes {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
-  padding-top: 12px;
-}
-
-.review-quotes figure {
-  background: var(--surface);
+  gap: 15px;
+  flex-shrink: 0;
+  padding: 16px 19px;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-md);
-  padding: 32px;
+  background: var(--surface);
+  transition: border-color .2s, background-color .2s;
+}
+.reviews-google-link:hover { border-color: var(--gold); background: var(--surface-elevated); }
+.google-mark {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f5efe6;
+  color: #4285f4;
+  font: 800 23px/1 Arial, sans-serif;
+}
+.reviews-google-link strong, .reviews-google-link small { display: block; }
+.reviews-google-link strong { font-size: 15px; }
+.reviews-google-link small { color: var(--muted); font-size: 12px; }
+.reviews-link-arrow { margin-left: 12px; color: var(--gold-deep); font-size: 21px; }
+.review-quotes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.review-quotes figure {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-sm);
+  min-height: 265px;
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #342c27, #292321);
 }
-
-.review-stars {
-  color: var(--gold-deep);
-  font-size: 17px;
-  letter-spacing: 3px;
+.review-quote-mark {
+  position: absolute;
+  right: 24px;
+  top: 4px;
+  color: rgba(225, 183, 103, .15);
+  font: 100px/1 Georgia, serif;
+  pointer-events: none;
 }
-
+.review-stars { color: #e1b767; font-size: 16px; letter-spacing: 3px; }
 .review-quotes blockquote {
-  font-size: clamp(1.35rem, 2.1vw, 1.7rem);
+  position: relative;
+  max-width: 36ch;
+  margin: 20px 0 30px;
+  font-size: clamp(1.18rem, 1.7vw, 1.45rem);
   font-weight: 600;
-  line-height: 1.36;
-  margin: 18px 0 24px;
+  line-height: 1.45;
   color: var(--ink);
 }
-
-.review-quotes figcaption {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  font-size: 15px;
-  margin-top: auto;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
+.review-quotes figcaption { display: flex; align-items: center; gap: 12px; margin-top: auto; }
+.review-avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #594a3c;
+  color: #f5efe6;
+  font-weight: 700;
 }
-
-.review-quotes figcaption span {
-  font-size: 13px;
-  color: var(--muted);
-}
+.review-quotes figcaption strong, .review-quotes figcaption small { display: block; }
+.review-quotes figcaption strong { font-size: 14px; }
+.review-quotes figcaption small, .reviews-note { color: var(--muted); font-size: 12px; }
+.reviews-note { margin-top: 16px; }
 
 /* Planner & Inquiry Section (Warm Sand & Ivory — Easy on the eyes!) */
 .planner {
@@ -2974,6 +2982,12 @@ label {
     grid-template-columns: 1fr;
     gap: 16px;
   }
+  .reviews-intro {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 24px;
+  }
+  .reviews-google-link { align-self: flex-start; }
   .offer-strip-inner,
   .closing .section-heading {
     flex-direction: column;
@@ -3328,6 +3342,7 @@ label {
   }
   .review-quotes figure {
     padding: 22px 18px;
+    min-height: 230px;
   }
   .review-quotes blockquote {
     font-size: 1.18rem;
