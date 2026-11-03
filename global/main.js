@@ -400,217 +400,20 @@
     });
   }
 
-  // 5. Infinite Circular 3-Card Ring Carousel for Packages (Малък момент · Голям момент · Момент по мярка)
-  // On mobile/tablet (<= 860px), whichever of the 3 cards is in the center ALWAYS shows the end of the left neighbor
-  // and the beginning of the right neighbor, looping endlessly in a circle!
-  document.querySelectorAll('.package-grid').forEach(grid => {
-    const origCards = [...grid.querySelectorAll(':scope > .package')];
-    if (origCards.length !== 3) return;
 
-    const createClone = (card, modIdx) => {
-      const clone = card.cloneNode(true);
-      clone.classList.add('is-carousel-clone');
-      clone.setAttribute('aria-hidden', 'true');
-      clone.dataset.modIndex = String(modIdx);
-      clone.querySelectorAll('[data-package]').forEach(link => {
-        link.addEventListener('click', () => {
-          const form = document.querySelector('#quick-plan');
-          const select = form?.elements?.namedItem('package');
-          if (select && [...select.options].some(o => o.value === link.dataset.package)) {
-            select.value = link.dataset.package;
-            form.dispatchEvent(new Event('input', { bubbles: true }));
-          }
-        });
-      });
-      return clone;
-    };
-
-    origCards.forEach((c, idx) => { c.dataset.modIndex = String(idx); });
-
-    // Prepend 2 sets (6 cards) and append 2 sets (6 cards) -> 5 sets of 3 = 15 cards total
-    // Middle set is at indices 6, 7, 8
-    const beforeFrag = document.createDocumentFragment();
-    for (let s = 0; s < 2; s++) {
-      origCards.forEach((c, idx) => beforeFrag.appendChild(createClone(c, idx)));
-    }
-    grid.prepend(beforeFrag);
-
-    const afterFrag = document.createDocumentFragment();
-    for (let s = 0; s < 2; s++) {
-      origCards.forEach((c, idx) => afterFrag.appendChild(createClone(c, idx)));
-    }
-    grid.appendChild(afterFrag);
-
-    const allCards = [...grid.querySelectorAll(':scope > .package')];
-
-    // Create Circular Carousel Navigation Bar below .package-grid
-    const nav = document.createElement('div');
-    nav.className = 'package-carousel-nav';
-    nav.setAttribute('aria-label', 'Навигация между пакетите');
-    const labels = ['Малък момент', 'Голям момент', 'Момент по мярка'];
-    nav.innerHTML = `
-      <button type="button" class="package-carousel-arrow" data-dir="-1" aria-label="Предишен пакет">‹</button>
-      <div class="package-carousel-dots">
-        ${labels.map((lbl, idx) => `<button type="button" class="package-carousel-dot" data-mod="${idx}">${lbl}</button>`).join('')}
-      </div>
-      <button type="button" class="package-carousel-arrow" data-dir="1" aria-label="Следващ пакет">›</button>
-    `;
-    grid.after(nav);
-
-    const dotBtns = [...nav.querySelectorAll('.package-carousel-dot')];
-    const isMobileCarousel = () => window.matchMedia('(max-width: 860px)').matches;
-
-    const getScrollForIndex = idx => {
-      const card = allCards[idx];
-      if (!card) return 0;
-      return card.offsetLeft - (grid.clientWidth - card.offsetWidth) / 2;
-    };
-
-    const getSingleSetWidth = () => {
-      if (!allCards[6] || !allCards[3]) return 0;
-      return allCards[6].offsetLeft - allCards[3].offsetLeft;
-    };
-
-    let currentCenterIdx = 7; // Start on the middle set (index 6 = Малък, 7 = Голям, 8 = По мярка)
-
-    const updateActiveState = centerIdx => {
-      currentCenterIdx = centerIdx;
-      const activeMod = ((centerIdx % 3) + 3) % 3;
-      allCards.forEach((card, idx) => {
-        card.classList.toggle('is-center-card', (idx % 3) === activeMod);
-      });
-      dotBtns.forEach((btn, idx) => {
-        btn.classList.toggle('is-active', idx === activeMod);
-      });
-    };
-
-    const findClosestCardIndex = () => {
-      const viewportCenter = grid.scrollLeft + grid.clientWidth / 2;
-      let bestIdx = 7;
-      let bestDist = Infinity;
-      allCards.forEach((card, idx) => {
-        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-        const dist = Math.abs(cardCenter - viewportCenter);
-        if (dist < bestDist) {
-          bestDist = dist;
-          bestIdx = idx;
-        }
-      });
-      return bestIdx;
-    };
-
-    let scrollTimer = null;
-    let isAdjusting = false;
-
-    const normalizeLoopPosition = () => {
-      if (!isMobileCarousel() || isAdjusting) return;
-      const setWidth = getSingleSetWidth();
-      if (setWidth <= 0) return;
-
-      // Seamless wrap during continuous scroll if entering outer sets
-      const minBound = getScrollForIndex(3);
-      const maxBound = getScrollForIndex(11);
-      if (grid.scrollLeft < minBound) {
-        isAdjusting = true;
-        grid.scrollLeft += setWidth;
-        isAdjusting = false;
-      } else if (grid.scrollLeft > maxBound) {
-        isAdjusting = true;
-        grid.scrollLeft -= setWidth;
-        isAdjusting = false;
-      }
-    };
-
-    const snapToMiddleSet = () => {
-      if (!isMobileCarousel() || isAdjusting) return;
-      const closestIdx = findClosestCardIndex();
-      updateActiveState(closestIdx);
-      if (closestIdx < 6 || closestIdx > 8) {
-        const targetIdx = 6 + (((closestIdx % 3) + 3) % 3);
-        const diff = getScrollForIndex(targetIdx) - getScrollForIndex(closestIdx);
-        isAdjusting = true;
-        grid.scrollLeft += diff;
-        currentCenterIdx = targetIdx;
-        isAdjusting = false;
-      }
-    };
-
-    grid.addEventListener('scroll', () => {
-      if (!isMobileCarousel() || isAdjusting) return;
-      normalizeLoopPosition();
-      const closestIdx = findClosestCardIndex();
-      updateActiveState(closestIdx);
-      clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(snapToMiddleSet, 130);
-    }, { passive: true });
-
-    // Tapping a peeking left or right card rotates the circle to center it
-    allCards.forEach((card, idx) => {
-      card.addEventListener('click', e => {
-        if (!isMobileCarousel()) return;
-        const activeMod = ((currentCenterIdx % 3) + 3) % 3;
-        if ((idx % 3) !== activeMod) {
-          e.preventDefault();
-          grid.scrollTo({ left: getScrollForIndex(idx), behavior: 'smooth' });
-        }
-      });
-    });
-
-    // Prev / Next circular arrows
-    nav.querySelectorAll('.package-carousel-arrow').forEach(arrow => {
-      arrow.addEventListener('click', () => {
-        const dir = Number(arrow.dataset.dir) || 1;
-        const nextIdx = currentCenterIdx + dir;
-        grid.scrollTo({ left: getScrollForIndex(nextIdx), behavior: 'smooth' });
-      });
-    });
-
-    // Pill buttons (Малък момент · Голям момент · Момент по мярка)
-    dotBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const targetMod = Number(btn.dataset.mod) || 0;
-        const currentMod = ((currentCenterIdx % 3) + 3) % 3;
-        let delta = targetMod - currentMod;
-        if (delta > 1) delta -= 3;
-        if (delta < -1) delta += 3;
-        grid.scrollTo({ left: getScrollForIndex(currentCenterIdx + delta), behavior: 'smooth' });
-      });
-    });
-
-    const initCarouselPosition = () => {
-      if (!isMobileCarousel()) {
-        allCards.forEach(c => c.classList.add('is-center-card'));
-        return;
-      }
-      // Start centered on index 6 (Малък момент) with Момент по мярка peeking on the left and Голям момент peeking on the right!
-      const startIdx = 6;
-      isAdjusting = true;
-      grid.scrollLeft = getScrollForIndex(startIdx);
-      updateActiveState(startIdx);
-      isAdjusting = false;
-    };
-
-    requestAnimationFrame(() => {
-      initCarouselPosition();
-      setTimeout(initCarouselPosition, 120);
-    });
-    window.addEventListener('resize', () => {
-      clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(initCarouselPosition, 100);
-    });
-  });
 })();
 
 // Zero-Footprint Tethered Gift-Bow Balloons on Offer Price Cards ([data-tethered-balloons])
 // - Adds 0px to section height! The 400 € Offer Card itself is wrapped with a 3D Satin Gold Bow on its top rim.
 // - 3 compact, realistic 3D balloons are tied directly to that bow and float gently above the corner of the card.
-// - Tap or click a balloon to pop it; dragging stretches its string.
+// - Drag to stretch a balloon, or double-tap it to pop it.
 (() => {
   const hosts = document.querySelectorAll('[data-tethered-balloons]');
   if (!hosts.length) return;
 
   const SVG_NS = 'http://www.w3.org/2000/svg';
   const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const compactMotion = () => window.matchMedia('(max-width: 860px)').matches;
 
   const playPopSound = () => {
     try {
@@ -789,7 +592,7 @@
       g.setAttribute('class', 'interactive-balloon');
       g.setAttribute('role', 'button');
       g.setAttribute('tabindex', '0');
-      g.setAttribute('aria-label', `Спукай балон ${i + 1}`);
+      g.setAttribute('aria-label', `Балон ${i + 1} — докоснете два пъти или издърпайте`);
 
       const stringShadow = document.createElementNS(SVG_NS, 'path');
       stringShadow.setAttribute('class', 'balloon-string-shadow');
@@ -895,6 +698,7 @@
         angle: 0,
         stretch: 1,
         popped: false,
+        lastTapTime: 0,
         phase: i * 1.45 + stageIdx * 0.9,
         dragging: false,
         touchPending: false,
@@ -925,7 +729,7 @@
         g.classList.remove('is-dragging');
         host.style.transform = '';
         playPopSound();
-        spawnBurst(b.x, b.y, 16);
+        spawnBurst(b.x, b.y, compactMotion() ? 6 : 16);
 
         g.style.display = 'none';
         b.stringPath.style.display = 'none';
@@ -955,11 +759,6 @@
 
       g.addEventListener('pointerdown', e => {
         if (b.popped) return;
-        if (e.pointerType === 'touch') {
-          e.preventDefault();
-          popBalloon();
-          return;
-        }
         const { px, py } = toLocalCoords(e);
         b.pointerId = e.pointerId;
         b.startX = px;
@@ -1004,7 +803,17 @@
           host.style.transform = '';
         }
         b.pointerId = null;
-        if (wasTap) popBalloon();
+        if (wasTap) {
+          const now = performance.now();
+          if (b.lastTapTime && now - b.lastTapTime < 500) {
+            b.lastTapTime = 0;
+            popBalloon();
+          } else {
+            b.lastTapTime = now;
+          }
+        } else {
+          b.lastTapTime = 0;
+        }
       };
 
       g.addEventListener('pointerup', endDrag);
@@ -1026,14 +835,15 @@
     let lastTime = performance.now();
 
     function renderFrame(now) {
-      if (!visible) {
+      if (!visible || document.hidden) {
         running = false;
         return;
       }
       const dt = Math.min(2, (now - lastTime) / 16.67);
       lastTime = now;
       const t = now * 0.0017;
-      const reduce = reducedMotion();
+      // On compact screens settle at rest instead of redrawing indefinitely.
+      const reduce = reducedMotion() || compactMotion();
 
       let pullX = 0;
       let pullY = 0;
@@ -1153,6 +963,10 @@
       });
       io.observe(host);
     }
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) startLoop();
+    });
 
     startLoop();
   });

@@ -2854,10 +2854,7 @@ label {
     margin-inline: auto;
   }
 
-  /* Infinite Circular 3-Card Ring Carousel for Packages (Always shows end of left card & start of right card!) */
-  .package.is-carousel-clone {
-    display: flex;
-  }
+  /* Native swipe carousel: three real cards, without duplicated content. */
   .package-grid {
     width: 100vw;
     margin-left: calc(50% - 50vw);
@@ -2865,7 +2862,8 @@ label {
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     gap: 12px;
-    padding: 20px 0 14px;
+    padding: 20px 16px 14px;
+    scroll-padding-inline: 16px;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
   }
@@ -2875,17 +2873,10 @@ label {
   .package-grid > .package {
     flex: 0 0 74vw;
     max-width: 320px;
-    scroll-snap-align: center;
-    scroll-snap-stop: always;
+    scroll-snap-align: start;
     padding: 24px 20px;
-    transform: scale(0.92);
-    opacity: 0.72;
-    transition: transform 0.25s ease, opacity 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-  }
-  .package-grid > .package.is-center-card {
-    transform: scale(1);
+    transform: none;
     opacity: 1;
-    box-shadow: var(--shadow-md);
   }
   .package h3 {
     font-size: 27px;
@@ -2963,8 +2954,10 @@ label {
     width: 100%;
     text-align: left;
     padding: 18px 22px;
-    margin-top: 34px;
+    margin-top: 120px;
   }
+  .tethered-balloons-svg [filter] { filter: none; }
+  .site-header { backdrop-filter: none; -webkit-backdrop-filter: none; }
   .tethered-balloons-svg {
     top: -246px;
     right: calc(52px - 180px);
@@ -3217,7 +3210,7 @@ label {
     justify-content: center;
     padding: 16px 18px;
     text-align: left;
-    margin-top: 38px;
+    margin-top: 120px;
   }
   .all-inc-price-box strong {
     font-size: 36px;
