@@ -19,11 +19,11 @@
 
 :root {
   /* Soothing, Eye-Friendly Warm Cashmere, Sand & Soft Mocha Palette (Zero harsh black/white glare!) */
-  --bg: #F2ECE1;           /* Warm Cashmere / Oatmeal */
-  --bg-soft: #E8DFD1;      /* Soft Travertine Sand */
-  --bg-deep: #DDD2C0;      /* Warm Champagne Stone */
-  --surface: #FAF6EE;      /* Soft Ivory Card Surface (never stark #fff) */
-  --surface-elevated: #FFFDF8;
+  --bg: #211d1b;
+  --bg-soft: #2a2421;
+  --bg-deep: #342b26;
+  --surface: #302925;
+  --surface-elevated: #3b322c;
 
   /* Warm Espresso Velvet (used only for the video stage & footer — warm, soft, never pitch black) */
   --velvet: #2B2520;
@@ -31,24 +31,24 @@
   --velvet-line: rgba(242, 236, 225, 0.14);
 
   /* Eye-Comfortable Typography */
-  --ink: #26211D;          /* Warm Espresso Charcoal */
-  --ink-soft: #433B34;     /* Soft Cocoa */
-  --muted: #6E645A;        /* Muted Warm Taupe */
+  --ink: #f5efe6;
+  --ink-soft: #e1d5c8;
+  --muted: #c5b6a7;
   --light-ink: #F5EFE6;
   --light-muted: #C2B8AA;
 
   /* Borders & Hairlines */
-  --line: rgba(38, 33, 29, 0.11);
-  --line-strong: rgba(38, 33, 29, 0.20);
+  --line: rgba(245, 239, 230, 0.16);
+  --line-strong: rgba(245, 239, 230, 0.30);
 
   /* Warm Champagne Gold & Botanical Sage Accents */
   --gold: #C48B2C;
   --gold-bright: #D9A141;
-  --gold-deep: #966615;
+  --gold-deep: #e1b767;
   --gold-subtle: rgba(196, 139, 44, 0.13);
   --gold-line: rgba(196, 139, 44, 0.34);
 
-  --sage: #3D5E4E;
+  --sage: #a3c5ab;
   --sage-subtle: rgba(61, 94, 78, 0.12);
 
   /* Fonts */
@@ -161,7 +161,7 @@ summary:focus-visible {
 
 ::selection {
   background: var(--gold-bright);
-  color: var(--ink);
+  color: #211d1b;
 }
 
 [hidden] {
@@ -275,11 +275,11 @@ summary:focus-visible {
 .primary:hover {
   background: var(--gold-deep);
   border-color: var(--gold-deep);
-  color: #fff;
+  color: #211d1b;
 }
 
 .secondary {
-  background: rgba(250, 246, 238, 0.75);
+  background: var(--surface);
   color: var(--ink);
   border-color: var(--line-strong);
 }
@@ -313,7 +313,7 @@ summary:focus-visible {
   top: 0;
   z-index: 60;
   height: 82px;
-  background: rgba(242, 236, 225, 0.92);
+  background: rgba(33, 29, 27, 0.94);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line);
@@ -914,7 +914,7 @@ summary:focus-visible {
 
 /* Featured Package: Warm Champagne & Gold Highlight (Soothing, not pitch black!) */
 .package-featured {
-  background: linear-gradient(180deg, #FFFDF9 0%, #F6ECDA 100%);
+  background: linear-gradient(180deg, #40352d 0%, #302925 100%);
   border: 2px solid var(--gold);
   box-shadow: var(--shadow-md);
 }
@@ -925,7 +925,7 @@ summary:focus-visible {
   top: -12px;
   left: 24px;
   background: var(--gold-deep);
-  color: #fff;
+  color: #211d1b;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -1175,7 +1175,7 @@ summary:focus-visible {
 
 .all-inc-price-box {
   position: relative;
-  background: linear-gradient(135deg, #FFFDF8 0%, #F4E6CA 100%);
+  background: linear-gradient(135deg, #40352d 0%, #302925 100%);
   border: 1.5px solid var(--gold);
   border-radius: var(--radius-md);
   padding: 18px 26px;
@@ -1580,7 +1580,7 @@ summary:focus-visible {
   height: 64px;
   border-radius: var(--radius-md);
   background: var(--gold-bright);
-  color: var(--ink);
+  color: #211d1b;
   display: grid;
   place-items: center;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
@@ -1623,7 +1623,7 @@ summary:focus-visible {
 .carousel-arrow:hover {
   background: var(--gold-bright);
   border-color: var(--gold-bright);
-  color: var(--ink);
+  color: #211d1b;
 }
 
 .reel-count {
@@ -2550,7 +2550,7 @@ label {
   border: 0;
   border-radius: var(--radius-sm);
   background: var(--gold-bright);
-  color: var(--ink);
+  color: #211d1b;
   z-index: 3;
   display: grid;
   place-items: center;
@@ -2582,7 +2582,7 @@ label {
 .lightbox-next:hover {
   background: var(--gold-bright);
   border-color: var(--gold-bright);
-  color: var(--ink);
+  color: #211d1b;
 }
 
 .lightbox-count {
@@ -2663,7 +2663,7 @@ label {
   font-size: 13px;
   font-weight: 700;
   color: var(--gold-deep);
-  background: rgba(250, 246, 238, 0.85);
+  background: var(--surface);
   border: 1px solid var(--gold-line);
   padding: 6px 12px;
   border-radius: var(--radius-sm);

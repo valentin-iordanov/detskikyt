@@ -604,7 +604,7 @@
 // Zero-Footprint Tethered Gift-Bow Balloons on Offer Price Cards ([data-tethered-balloons])
 // - Adds 0px to section height! The 400 € Offer Card itself is wrapped with a 3D Satin Gold Bow on its top rim.
 // - 3 compact, realistic 3D balloons are tied directly to that bow and float gently above the corner of the card.
-// - Dragging a balloon anywhere across the screen stretches its silk string and tilts the Offer Card; pulling too far (or double-clicking) POPS it!
+// - Tap or click a balloon to pop it; dragging stretches its string.
 (() => {
   const hosts = document.querySelectorAll('[data-tethered-balloons]');
   if (!hosts.length) return;
@@ -636,7 +636,7 @@
     const svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('class', 'tethered-balloons-svg');
     svg.setAttribute('viewBox', '0 0 1 1');
-    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('aria-label', 'Балони');
 
     const pfx = `tb_${stageIdx}_`;
     svg.innerHTML = `
@@ -785,6 +785,9 @@
       const styleName = def.style;
       const g = document.createElementNS(SVG_NS, 'g');
       g.setAttribute('class', 'interactive-balloon');
+      g.setAttribute('role', 'button');
+      g.setAttribute('tabindex', '0');
+      g.setAttribute('aria-label', `Спукай балон ${i + 1}`);
 
       const stringShadow = document.createElementNS(SVG_NS, 'path');
       stringShadow.setAttribute('class', 'balloon-string-shadow');
@@ -890,13 +893,14 @@
         angle: 0,
         stretch: 1,
         popped: false,
-        lastTapTime: 0,
         phase: i * 1.45 + stageIdx * 0.9,
         dragging: false,
         touchPending: false,
         pointerId: null,
         startX: 0,
         startY: 0,
+        startClientX: 0,
+        startClientY: 0,
         dragOffsetX: 0,
         dragOffsetY: 0,
         lastPointerX: 0,
@@ -941,28 +945,20 @@
 
       b.popBalloon = popBalloon;
 
-      g.addEventListener('dblclick', e => {
+      g.addEventListener('keydown', e => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
         e.preventDefault();
-        e.stopPropagation();
         popBalloon();
       });
 
       g.addEventListener('pointerdown', e => {
         if (b.popped) return;
-        const now = performance.now();
-        if (now - b.lastTapTime < 340) {
-          e.preventDefault();
-          e.stopPropagation();
-          b.lastTapTime = 0;
-          popBalloon();
-          return;
-        }
-        b.lastTapTime = now;
-
         const { px, py } = toLocalCoords(e);
         b.pointerId = e.pointerId;
         b.startX = px;
         b.startY = py;
+        b.startClientX = e.clientX;
+        b.startClientY = e.clientY;
         b.dragOffsetX = b.x - px;
         b.dragOffsetY = b.y - py;
         b.lastPointerX = px;
@@ -991,6 +987,8 @@
 
       const endDrag = e => {
         if (e.pointerId !== undefined && e.pointerId !== b.pointerId) return;
+        const wasTap = e.type === 'pointerup' && b.dragging &&
+          Math.hypot(e.clientX - b.startClientX, e.clientY - b.startClientY) < 10;
         b.touchPending = false;
         if (b.dragging) {
           b.dragging = false;
@@ -999,6 +997,7 @@
           host.style.transform = '';
         }
         b.pointerId = null;
+        if (wasTap) popBalloon();
       };
 
       g.addEventListener('pointerup', endDrag);
