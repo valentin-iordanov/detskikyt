@@ -2854,7 +2854,8 @@ label {
     margin-inline: auto;
   }
 
-  /* Native swipe carousel: three real cards, without duplicated content. */
+  /* Native swipe with a single duplicate at each end for seamless wrapping. */
+  .package.is-carousel-clone { display: flex; }
   .package-grid {
     width: 100vw;
     margin-left: calc(50% - 50vw);
@@ -2862,8 +2863,7 @@ label {
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     gap: 12px;
-    padding: 20px 16px 14px;
-    scroll-padding-inline: 16px;
+    padding: 20px 0 14px;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
   }
@@ -2873,9 +2873,14 @@ label {
   .package-grid > .package {
     flex: 0 0 74vw;
     max-width: 320px;
-    scroll-snap-align: start;
+    scroll-snap-align: center;
     padding: 24px 20px;
-    transform: none;
+    transform: scale(.92);
+    opacity: .72;
+    transition: transform .2s ease, opacity .2s ease;
+  }
+  .package-grid > .package.is-center-card {
+    transform: scale(1);
     opacity: 1;
   }
   .package h3 {
@@ -2954,12 +2959,13 @@ label {
     width: 100%;
     text-align: left;
     padding: 18px 22px;
-    margin-top: 120px;
+    min-height: 132px;
+    margin-top: 8px;
   }
   .tethered-balloons-svg [filter] { filter: none; }
   .site-header { backdrop-filter: none; -webkit-backdrop-filter: none; }
   .tethered-balloons-svg {
-    top: -246px;
+    top: calc(100% - 260px);
     right: calc(52px - 180px);
   }
   .all-inc-metrics {
@@ -3210,7 +3216,7 @@ label {
     justify-content: center;
     padding: 16px 18px;
     text-align: left;
-    margin-top: 120px;
+    margin-top: 8px;
   }
   .all-inc-price-box strong {
     font-size: 36px;
@@ -3218,10 +3224,10 @@ label {
   }
   .all-inc-price-box span {
     font-size: 11.5px;
-    max-width: 65%;
+    max-width: 54%;
   }
   .tethered-balloons-svg {
-    top: -246px;
+    top: calc(100% - 260px);
     right: calc(46px - 180px);
   }
   /* Full-width Horizontal Metrics on Mobile (Zero squishing!) */

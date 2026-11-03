@@ -400,7 +400,71 @@
     });
   }
 
+  // Circular swipe uses only one duplicate at each end; native scrolling does
+  // the work and the position is corrected only after the gesture ends.
+  document.querySelectorAll('.package-grid').forEach(grid => {
+    const originals = [...grid.querySelectorAll(':scope > .package')];
+    if (originals.length !== 3) return;
+    const clone = card => {
+      const copy = card.cloneNode(true);
+      copy.classList.add('is-carousel-clone');
+      copy.setAttribute('aria-hidden', 'true');
+      copy.querySelectorAll('a, button, input, select, textarea').forEach(el => el.tabIndex = -1);
+      return copy;
+    };
+    const lastCopy = clone(originals[2]);
+    const firstCopy = clone(originals[0]);
+    grid.prepend(lastCopy);
+    grid.append(firstCopy);
+    const cards = [lastCopy, ...originals, firstCopy];
+    const mobile = window.matchMedia('(max-width: 860px)');
+    let timer;
 
+    const position = card => {
+      const gridRect = grid.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
+      return grid.scrollLeft + cardRect.left + cardRect.width / 2 - gridRect.left - gridRect.width / 2;
+    };
+    const center = card => {
+      grid.style.scrollSnapType = 'none';
+      grid.scrollLeft = position(card);
+      grid.style.scrollSnapType = '';
+    };
+    const settle = () => {
+      if (!mobile.matches) return;
+      const middle = grid.getBoundingClientRect().left + grid.clientWidth / 2;
+      const nearest = cards.reduce((best, card) => {
+        const rect = card.getBoundingClientRect();
+        const distance = Math.abs(rect.left + rect.width / 2 - middle);
+        return distance < best.distance ? { card, distance } : best;
+      }, { card: originals[0], distance: Infinity }).card;
+      if (nearest === lastCopy) center(originals[2]);
+      if (nearest === firstCopy) center(originals[0]);
+    };
+    grid.addEventListener('scroll', () => {
+      if (!mobile.matches) return;
+      clearTimeout(timer);
+      timer = setTimeout(settle, 160);
+    }, { passive: true });
+    cards.forEach(card => card.addEventListener('click', event => {
+      if (!mobile.matches) return;
+      if (card.classList.contains('is-carousel-clone') || Math.abs(position(card) - grid.scrollLeft) > 20) {
+        event.preventDefault();
+        grid.scrollTo({ left: position(card), behavior: 'smooth' });
+      }
+    }, true));
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => entry.target.classList.toggle('is-center-card', entry.intersectionRatio >= 0.9));
+      }, { root: grid, threshold: [0.9] });
+      cards.forEach(card => observer.observe(card));
+    }
+    const initialize = () => {
+      if (mobile.matches) center(originals[0]);
+    };
+    requestAnimationFrame(initialize);
+    mobile.addEventListener('change', initialize);
+  });
 })();
 
 // Zero-Footprint Tethered Gift-Bow Balloons on Offer Price Cards ([data-tethered-balloons])
